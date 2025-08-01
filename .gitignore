@@ -1,0 +1,39 @@
+# Bỏ qua thư mục môi trường ảo
+venv/
+ENV/
+env/
+.venv/
+synenv/
+
+# File Python biên dịch
+__pycache__/
+*.py[cod]
+*$py.class
+
+# File log và tạm
+*.log
+*.tmp
+
+# File cấu hình hệ thống
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook checkpoints (nếu dùng)
+.ipynb_checkpoints/
+
+# VSCode settings (tuỳ chọn)
+.vscode/
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# mypy
+.mypy_cache/
+
+# virtualenv pip-tools
+pip-log.txt
+pip-delete-this-directory.txt

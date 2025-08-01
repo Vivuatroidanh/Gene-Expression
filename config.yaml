@@ -1,0 +1,178 @@
+# ALS Diagnosis Research Configuration
+# Based on the methodology from the research paper with SHAP integration
+
+project:
+  name: "ALS_Diagnosis_with_SHAP"
+  version: "1.0.0"
+  description: "Advanced ALS diagnosis using gene expression data and explainable AI"
+  author: "Research Team"
+  random_seed: 42
+
+# Data configuration
+data:
+  base_dir: "data"
+  datasets: ["GSE112676", "GSE112680"]
+  sample_types: ["ALS", "Control"] # Exclude ALS-mimic as per paper
+  test_size: 0.1 # Proportion for final testing
+  validation_split: 0.9 # 90% train, 10% test as per paper
+
+  # Data preprocessing
+  preprocessing:
+    normalization: "StandardScaler"
+    remove_low_variance: true
+    variance_threshold: 0.01
+    handle_missing: "drop" # or "impute"
+
+# Feature selection configuration
+feature_selection:
+  # MMPC algorithm settings
+  mmpc:
+    max_k: 3 # Maximum conditioning set size
+    significance_threshold: 0.1 # Statistical significance threshold
+    test_method: "testIndFisher" # Independence test method
+
+  # Ridge regression ranking
+  ridge:
+    alpha_range: [0.01, 0.1, 1.0, 10.0] # Regularization strength options
+    cv_folds: 5 # Cross-validation folds for hyperparameter tuning
+
+  # Sequential Forward Feature Selection
+  sffs:
+    max_features: 25 # Maximum number of features to consider
+    cv_folds: 4 # Cross-validation folds
+    scoring: "accuracy" # Scoring metric
+
+# Machine learning model configuration
+modeling:
+  algorithms:
+    - "SVM"
+    - "RandomForest"
+    - "XGBoost"
+    - "LogisticRegression"
+
+  # Hyperparameter tuning
+  hyperparameter_tuning: true
+  cv_folds: 4
+
+  # Algorithm-specific parameters
+  svm:
+    kernel: "rbf"
+    C_range: [0.1, 1.0, 10.0]
+    gamma: "scale"
+
+  random_forest:
+    n_estimators: [50, 100, 200]
+    max_depth: [5, 10, null]
+    min_samples_split: [2, 5]
+
+  xgboost:
+    n_estimators: [50, 100, 200]
+    max_depth: [3, 5, 7]
+    learning_rate: [0.01, 0.1, 0.2]
+
+  logistic_regression:
+    C_range: [0.1, 1.0, 10.0]
+    penalty: ["l1", "l2"]
+    solver: "liblinear"
+
+# SHAP interpretability configuration
+shap:
+  # Explainer settings
+  explainer_type: "auto" # auto, tree, linear, kernel
+  num_background_samples: 50 # Background samples for explanation
+  max_analysis_samples: 100 # Max samples to analyze (for performance)
+
+  # Visualization settings
+  generate_plots: true
+  plot_settings:
+    figure_size: [10, 8]
+    dpi: 300
+    save_format: "png"
+
+  # Analysis options
+  analyze_interactions: true
+  generate_waterfall_plots: true
+  num_waterfall_samples: 3 # Number of individual samples to explain
+
+  # Advanced analysis
+  feature_clustering: false # Cluster similar features
+  pathway_analysis: false # Requires additional biological databases
+
+# Output and reporting configuration
+output:
+  results_dir: "data/results"
+  save_intermediate: true # Save intermediate results
+  generate_report: true
+
+  # Report settings
+  report_format: ["markdown", "html"] # Output formats
+  include_visualizations: true
+  include_code: false # Include code snippets in report
+
+  # Export settings
+  export_models: true # Save trained models
+  export_features: true # Save selected feature lists
+  export_shap_values: true # Save SHAP values for further analysis
+
+# Computational settings
+computation:
+  n_jobs: -1 # Number of parallel jobs (-1 for all cores)
+  memory_limit: "8GB" # Memory usage limit
+  cache_results: true # Cache intermediate results
+  verbose: true
+
+# Logging configuration
+logging:
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  save_logs: true
+  log_dir: "logs"
+
+# Quality control and validation
+quality_control:
+  # Data quality checks
+  check_missing_values: true
+  check_outliers: true
+  outlier_method: "iqr" # iqr, zscore, isolation_forest
+
+  # Model validation
+  cross_validation: true
+  stratified_sampling: true
+  bootstrap_validation: false
+
+  # Performance thresholds
+  min_accuracy: 0.7 # Minimum acceptable accuracy
+  min_auc: 0.7 # Minimum acceptable AUC
+
+# Advanced options
+advanced:
+  # Experimental features
+  enable_gpu: false # Use GPU acceleration if available
+  distributed_computing: false # Use distributed computing
+
+  # Custom algorithms
+  custom_feature_selection: false
+  custom_models: false
+
+  # Integration options
+  r_integration: false # Use R packages through rpy2
+  bioconductor_packages: false # Use Bioconductor for pathway analysis
+
+# Reproducibility settings
+reproducibility:
+  set_random_seeds: true
+  save_environment: true # Save package versions
+  version_control: true # Track code versions
+
+# Security and privacy
+security:
+  anonymize_data: false # Remove patient identifiers
+  encrypt_results: false # Encrypt sensitive results
+  audit_log: true # Keep audit trail
+
+# Development and debugging
+development:
+  debug_mode: false
+  profile_performance: false
+  unit_tests: true
+  integration_tests: false

@@ -1,0 +1,241 @@
+# Cấu trúc dự án nghiên cứu ALS với tích hợp SHAP
+
+## Cấu trúc thư mục dự án
+
+```
+ALS_Research/
+├── README.md
+├── requirements.txt
+├── config.yaml
+├── data/
+│   ├── raw/
+│   │   ├── GSE112676_series_matrix.txt
+│   │   ├── GSE112680_series_matrix.txt
+│   │   └── annotations/
+│   ├── processed/
+│   │   ├── combined_expression_data.csv
+│   │   ├── sample_metadata.csv
+│   │   └── gene_annotations.csv
+│   └── results/
+│       ├── selected_genes/
+│       ├── models/
+│       └── shap_analysis/
+├── src/
+│   ├── __init__.py
+│   ├── data_processing/
+│   │   ├── __init__.py
+│   │   ├── geo_downloader.py
+│   │   ├── data_preprocessor.py
+│   │   └── probe_mapper.py
+│   ├── feature_selection/
+│   │   ├── __init__.py
+│   │   ├── mmpc_selector.py
+│   │   ├── ridge_ranker.py
+│   │   └── sffs_optimizer.py
+│   ├── modeling/
+│   │   ├── __init__.py
+│   │   ├── ml_trainer.py
+│   │   └── model_evaluator.py
+│   ├── interpretability/
+│   │   ├── __init__.py
+│   │   ├── shap_analyzer.py
+│   │   └── gene_pathway_analyzer.py
+│   └── utils/
+│       ├── __init__.py
+│       ├── logger.py
+│       └── config_loader.py
+├── notebooks/
+│   ├── 01_data_exploration.ipynb
+│   ├── 02_feature_selection.ipynb
+│   ├── 03_model_training.ipynb
+│   └── 04_shap_analysis.ipynb
+├── scripts/
+│   ├── download_data.py
+│   ├── run_pipeline.py
+│   └── generate_report.py
+└── tests/
+    ├── test_data_processing.py
+    ├── test_feature_selection.py
+    └── test_modeling.py
+```
+
+## Hướng dẫn cài đặt và chạy
+
+### 1. Cài đặt môi trường
+
+```bash
+# Tạo virtual environment
+python -m venv als_env
+source als_env/bin/activate  # Linux/Mac
+# hoặc
+als_env\Scripts\activate  # Windows
+
+# Cài đặt packages
+pip install -r requirements.txt
+```
+
+### 2. Tải dữ liệu
+
+```bash
+# Tải dữ liệu từ GEO
+python scripts/download_data.py --datasets GSE112676,GSE112680
+
+# Hoặc chạy từng bước
+python -c "
+from src.data_processing.geo_downloader import GEODownloader
+downloader = GEODownloader()
+downloader.download_series(['GSE112676', 'GSE112680'])
+"
+```
+
+### 3. Chạy pipeline hoàn chỉnh
+
+```bash
+# Chạy toàn bộ pipeline
+python scripts/run_pipeline.py --config config.yaml
+
+# Hoặc chạy từng bước
+python scripts/run_pipeline.py --step preprocessing
+python scripts/run_pipeline.py --step feature_selection
+python scripts/run_pipeline.py --step modeling
+python scripts/run_pipeline.py --step shap_analysis
+```
+
+## File cấu hình (config.yaml)
+
+```yaml
+# Cấu hình dự án
+project:
+  name: "ALS_Diagnosis_with_SHAP"
+  version: "1.0.0"
+  random_seed: 42
+
+# Cấu hình dữ liệu
+data:
+  datasets: ["GSE112676", "GSE112680"]
+  sample_types: ["ALS", "Control"]  # Loại bỏ ALS-mimic
+  train_test_split: 0.9
+  cross_validation_folds: 4
+
+# Cấu hình tiền xử lý
+preprocessing:
+  normalization: "StandardScaler"
+  remove_low_variance: true
+  variance_threshold: 0.01
+
+# Cấu hình lựa chọn đặc trưng
+feature_selection:
+  mmpc:
+    max_k: 3
+    significance_threshold: 0.1
+    test_method: "testIndFisher"
+  ridge:
+    alpha_range: [0.01, 0.1, 1.0, 10.0]
+    cv_folds: 5
+  sffs:
+    max_features: 30
+    scoring: "accuracy"
+
+# Cấu hình mô hình
+modeling:
+  algorithms: ["SVM", "RandomForest", "XGBoost", "LogisticRegression"]
+  hyperparameter_tuning: true
+  cv_folds: 4
+
+# Cấu hình SHAP
+shap:
+  explainer_type: "auto"  # auto, tree, linear, kernel
+  num_background_samples: 100
+  generate_plots: true
+  analyze_interactions: true
+```
+
+## Hướng dẫn tải từng loại dataset
+
+### Series Matrix Files
+- **Mô tả**: Dữ liệu biểu hiện gen đã được xử lý sẵn
+- **Format**: Tab-separated text file
+- **Cách tải**: Tự động thông qua GEOquery hoặc download manual từ GEO
+- **Sử dụng**: Đây là dữ liệu chính cho analysis
+
+### Sample Metadata
+- **Mô tả**: Thông tin về từng sample (ALS/Control/Mimic, age, gender, etc.)
+- **Format**: Được embed trong Series Matrix file
+- **Cách tải**: Extract từ Series Matrix header
+- **Sử dụng**: Phân loại samples và tạo labels
+
+### Gene Annotations
+- **Mô tả**: Mapping giữa probe IDs và gene symbols
+- **Format**: Tab-separated text file
+- **Cách tải**: Tự động download từ GEO platform information
+- **Sử dụng**: Convert probe IDs thành gene names có nghĩa sinh học
+
+### Supplementary Files
+- **Mô tả**: Raw data và additional information
+- **Format**: Compressed archives (.tar.gz)
+- **Cách tải**: Optional, chỉ cần nếu muốn custom preprocessing
+- **Sử dụng**: Advanced analysis hoặc quality control
+
+## Notebooks hướng dẫn
+
+### 01_data_exploration.ipynb
+- Khám phá cấu trúc dữ liệu
+- Visualize sample distribution
+- Quality control checks
+- Missing value analysis
+
+### 02_feature_selection.ipynb
+- MMPC feature selection
+- Ridge regression ranking
+- SFFS optimization
+- Feature selection comparison
+
+### 03_model_training.ipynb
+- Multiple algorithm training
+- Hyperparameter tuning
+- Cross-validation
+- Model comparison
+
+### 04_shap_analysis.ipynb
+- SHAP value calculation
+- Feature importance visualization
+- Individual prediction explanation
+- Gene pathway analysis
+
+## Lưu ý quan trọng
+
+1. **Memory Requirements**: Dữ liệu gene expression khá lớn, cần ít nhất 8GB RAM
+2. **Processing Time**: Pipeline hoàn chỉnh có thể mất 2-4 giờ tùy thuộc vào hardware
+3. **Dependencies**: Một số packages có thể cần compiler (gcc/Visual Studio)
+4. **Data Storage**: Cần khoảng 2-3GB dung lượng cho dữ liệu và kết quả
+
+## Troubleshooting
+
+### Lỗi download dữ liệu
+```bash
+# Kiểm tra kết nối internet
+ping ncbi.nlm.nih.gov
+
+# Thử download manual nếu automatic fails
+# Truy cập: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE112676
+```
+
+### Lỗi memory
+```python
+# Giảm batch size hoặc sử dụng chunking
+import pandas as pd
+chunk_size = 1000
+for chunk in pd.read_csv('large_file.csv', chunksize=chunk_size):
+    # Process chunk
+    pass
+```
+
+### Lỗi dependencies
+```bash
+# Cài đặt build tools
+# Ubuntu/Debian:
+sudo apt-get install build-essential
+
+# Windows:
+# Cài đặt Visual Studio Build Tools
+```

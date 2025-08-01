@@ -4,6 +4,8 @@ ENV/
 env/
 .venv/
 synenv/
+data/
+logs/
 
 # File Python biên dịch
 __pycache__/

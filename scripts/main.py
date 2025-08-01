@@ -15,8 +15,8 @@ from datetime import datetime
 # Import our custom modules
 sys.path.append('src')
 from data_processing.geo_downloader import GEODownloader
-from feature_selection_pipeline import FeatureSelectionPipeline
-from shap_interpretability import SHAPAnalyzer
+from feature_selection.feature_selection_pipeline import FeatureSelectionPipeline
+from interpretability.shap_interpretability import SHAPAnalyzer
 
 def setup_logging(log_level: str = "INFO"):
     """Setup logging configuration"""

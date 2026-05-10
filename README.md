@@ -202,6 +202,7 @@ python 09_external_validation.py
 ## Notes
 
 - Ensure all input data files are placed in the `data/` directory before running any script.
+- Create new folder: `plots/` directory, `logs/` directory, `models/` directory before running any script.
 - Intermediate outputs from each stage will be saved to the `results/` directory automatically.
 - All scripts must be run from the **root directory** of this repository.
 - If you encounter package conflicts, consider using a Python virtual environment (`venv` or `conda`) and installing packages in isolation.
